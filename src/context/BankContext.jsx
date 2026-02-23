@@ -2,28 +2,102 @@ import React, { createContext, useState, useCallback, useEffect } from 'react';
 
 export const BankContext = createContext();
 
+const initialTransactions = [
+  {
+    id: 1,
+    type: 'receive',
+    date: new Date(Date.now() - 86400000 * 2).toLocaleString('en-IN'),
+    sender: 'Employer',
+    receiver: 'My Account',
+    amount: 50000,
+    note: 'Salary for the month',
+    status: 'completed',
+  },
+  {
+    id: 2,
+    type: 'send',
+    date: new Date(Date.now() - 86400000).toLocaleString('en-IN'),
+    sender: 'My Account',
+    receiver: 'Amazon',
+    amount: 1500,
+    note: 'Shopping',
+    status: 'completed',
+  },
+  {
+    id: 3,
+    type: 'withdraw',
+    date: new Date().toLocaleString('en-IN'),
+    sender: 'My Account',
+    receiver: 'ATM',
+    amount: 2000,
+    note: 'Cash withdrawal',
+    status: 'completed',
+  },
+];
+
+const initialNotifications = [
+  {
+    id: 1,
+    type: 'receive',
+    message: 'Salary received from Employer - ₹50,000.00',
+    timestamp: new Date(Date.now() - 86400000 * 2).toLocaleString('en-IN'),
+    read: true,
+  },
+  {
+    id: 2,
+    type: 'send',
+    message: 'Money sent to Amazon - ₹1,500.00',
+    timestamp: new Date(Date.now() - 86400000).toLocaleString('en-IN'),
+    read: false,
+  },
+];
+
 export const BankProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [balance, setBalance] = useState(50000);
-  const [transactions, setTransactions] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const [balance, setBalance] = useState(46500);
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [notifications, setNotifications] = useState(initialNotifications);
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('bankUser');
-    const savedBalance = localStorage.getItem('bankBalance');
-    const savedTransactions = localStorage.getItem('bankTransactions');
-    const savedNotifications = localStorage.getItem('bankNotifications');
+    try {
+      const savedUser = localStorage.getItem('bankUser');
+      const savedBalance = localStorage.getItem('bankBalance');
+      const savedTransactions = localStorage.getItem('bankTransactions');
+      const savedNotifications = localStorage.getItem('bankNotifications');
 
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedBalance) setBalance(JSON.parse(savedBalance));
-    if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
-    if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
+      if (savedUser && savedUser !== 'undefined') {
+        setUser(JSON.parse(savedUser));
+      }
+
+      if (savedBalance && savedBalance !== 'undefined') {
+        setBalance(JSON.parse(savedBalance));
+      }
+      
+      if (savedTransactions && savedTransactions !== 'undefined') {
+        const parsed = JSON.parse(savedTransactions);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTransactions(parsed);
+        }
+      }
+      
+      if (savedNotifications && savedNotifications !== 'undefined') {
+        const parsed = JSON.parse(savedNotifications);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setNotifications(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing localStorage data, resetting defaults:', e);
+    }
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
-    if (user) localStorage.setItem('bankUser', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('bankUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('bankUser');
+    }
   }, [user]);
 
   useEffect(() => {
@@ -39,8 +113,8 @@ export const BankProvider = ({ children }) => {
   }, [notifications]);
 
   const login = useCallback((username, password) => {
-    // Simple login - no real authentication
-    if (username && password) {
+    // Validation for demo credentials
+    if (username === 'gowthami@gmail.com' && password === '123456') {
       const userData = {
         username,
         loginTime: new Date().toISOString(),

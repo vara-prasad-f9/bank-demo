@@ -49,7 +49,7 @@ const LoginPage = () => {
       if (success) {
         navigate('/dashboard');
       } else {
-        setError('Login failed. Please try again.');
+        setError('Invalid email or password.');
       }
       setLoading(false);
     }, 500);
