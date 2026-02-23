@@ -54,7 +54,7 @@ const initialNotifications = [
 
 export const BankProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [balance, setBalance] = useState(46500);
+  const [balance, setBalance] = useState(3000000);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [notifications, setNotifications] = useState(initialNotifications);
 
@@ -71,7 +71,12 @@ export const BankProvider = ({ children }) => {
       }
 
       if (savedBalance && savedBalance !== 'undefined') {
-        setBalance(JSON.parse(savedBalance));
+        const parsedBalance = JSON.parse(savedBalance);
+        if (parsedBalance === 46500) {
+          setBalance(3000000);
+        } else {
+          setBalance(parsedBalance);
+        }
       }
       
       if (savedTransactions && savedTransactions !== 'undefined') {
@@ -199,6 +204,37 @@ export const BankProvider = ({ children }) => {
     return { success: true, message: 'Money withdrawn successfully' };
   }, [balance]);
 
+  const depositMoney = useCallback((accountHolder, amount) => {
+    if (amount <= 0) {
+      return { success: false, message: 'Invalid amount' };
+    }
+
+    const newTransaction = {
+      id: Date.now(),
+      type: 'receive',
+      date: new Date().toLocaleString('en-IN'),
+      sender: 'Cash Deposit',
+      receiver: accountHolder,
+      amount: parseFloat(amount),
+      note: 'Cash Deposit',
+      status: 'completed',
+    };
+
+    setBalance((prev) => prev + parseFloat(amount));
+    setTransactions((prev) => [newTransaction, ...prev]);
+
+    const notification = {
+      id: Date.now(),
+      type: 'receive',
+      message: `Money deposited - ₹${parseFloat(amount).toFixed(2)}`,
+      timestamp: new Date().toLocaleString('en-IN'),
+      read: false,
+    };
+    setNotifications((prev) => [notification, ...prev]);
+
+    return { success: true, message: 'Money deposited successfully' };
+  }, [balance]);
+
   const addNotification = useCallback((type, message) => {
     const notification = {
       id: Date.now(),
@@ -231,6 +267,7 @@ export const BankProvider = ({ children }) => {
     logout,
     sendMoney,
     withdrawMoney,
+    depositMoney,
     addNotification,
     markNotificationAsRead,
     getUnreadCount,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -16,6 +16,13 @@ import {
   Paper,
   Chip,
   Stack,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -28,7 +35,56 @@ import { formatCurrency } from '../utils/helpers';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, balance, transactions } = useBank();
+  const { user, balance, transactions, withdrawMoney, depositMoney } = useBank();
+
+  const [dialogConfig, setDialogConfig] = useState({ open: false, type: 'withdraw' });
+  const [formData, setFormData] = useState({ amount: '', phone: '', otp: '' });
+  const [dialogError, setDialogError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const handleOpenDialog = (type) => {
+    setDialogConfig({ open: true, type });
+    setFormData({ amount: '', phone: '', otp: '' });
+    setDialogError('');
+  };
+
+  const handleCloseDialog = () => {
+    setDialogConfig({ ...dialogConfig, open: false });
+  };
+
+  const handleTransactionSubmit = () => {
+    setDialogError('');
+    if (!formData.amount || isNaN(formData.amount) || Number(formData.amount) <= 0) {
+      setDialogError('Please enter a valid amount');
+      return;
+    }
+    if (formData.phone !== '9876543210') {
+      setDialogError('Invalid phone number. Use dummy: 9876543210');
+      return;
+    }
+    if (formData.otp !== '123456') {
+      setDialogError('Invalid OTP. Use dummy: 123456');
+      return;
+    }
+
+    if (dialogConfig.type === 'withdraw') {
+      const res = withdrawMoney(user?.username || 'My Account', formData.amount);
+      if (res.success) {
+        setSuccessMsg(`Successfully withdrawn ₹${formData.amount}`);
+        handleCloseDialog();
+      } else {
+        setDialogError(res.message);
+      }
+    } else {
+      const res = depositMoney(user?.username || 'My Account', formData.amount);
+      if (res.success) {
+        setSuccessMsg(`Successfully deposited ₹${formData.amount}`);
+        handleCloseDialog();
+      } else {
+        setDialogError(res.message);
+      }
+    }
+  };
 
   const lastTransactions = transactions.slice(0, 5);
 
@@ -99,9 +155,28 @@ const Dashboard = () => {
               <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 2 }}>
                 {formatCurrency(balance)}
               </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8 }}>
+              <Typography variant="caption" sx={{ opacity: 0.8, display: 'block', mb: 2 }}>
                 Available for transactions
               </Typography>
+              
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                <Button 
+                  variant="contained" 
+                  color="warning" 
+                  onClick={() => handleOpenDialog('withdraw')}
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  Withdraw
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="success" 
+                  onClick={() => handleOpenDialog('deposit')}
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  Deposit
+                </Button>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
@@ -272,6 +347,64 @@ const Dashboard = () => {
           </Button>
         </Box>
       )}
+
+      {/* Transaction Dialog */}
+      <Dialog open={dialogConfig.open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>
+          {dialogConfig.type === 'withdraw' ? 'Withdraw Money' : 'Deposit Money'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {dialogError && <Alert severity="error">{dialogError}</Alert>}
+            <TextField
+              label="Amount"
+              type="number"
+              fullWidth
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              placeholder="Enter amount"
+            />
+            <TextField
+              label="Phone Number"
+              fullWidth
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="Use dummy: 9876543210"
+              helperText="Dummy: 9876543210"
+            />
+            <TextField
+              label="OTP"
+              fullWidth
+              value={formData.otp}
+              onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+              placeholder="Use dummy: 123456"
+              helperText="Dummy: 123456"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleCloseDialog} color="inherit">Cancel</Button>
+          <Button 
+            onClick={handleTransactionSubmit} 
+            variant="contained" 
+            color={dialogConfig.type === 'withdraw' ? 'warning' : 'success'}
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!successMsg}
+        autoHideDuration={4000}
+        onClose={() => setSuccessMsg('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSuccessMsg('')} severity="success" sx={{ width: '100%' }}>
+          {successMsg}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
