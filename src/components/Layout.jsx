@@ -6,6 +6,7 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Toolbar,
@@ -107,9 +108,8 @@ const Layout = ({ children }) => {
       <List>
         {menuItems.map((item) => (
           <ListItem
-            button
             key={item.path}
-            onClick={() => handleNavigate(item.path)}
+            disablePadding
             sx={{
               backgroundColor: isActive(item.path) ? '#f0f4ff' : 'transparent',
               borderLeft: isActive(item.path) ? '4px solid #667eea' : '4px solid transparent',
@@ -117,21 +117,26 @@ const Layout = ({ children }) => {
               '&:hover': { backgroundColor: '#f9f9f9' },
             }}
           >
-            <ListItemIcon sx={{ color: isActive(item.path) ? '#667eea' : '#666' }}>
-              {item.badge !== undefined && item.badge > 0 ? (
-                <Badge badgeContent={item.badge} color="error">
-                  {item.icon}
-                </Badge>
-              ) : (
-                item.icon
-              )}
-            </ListItemIcon>
-            <ListItemText
-              primary={item.label}
-              primaryTypographyProps={{
-                sx: { fontWeight: isActive(item.path) ? 600 : 400 },
-              }}
-            />
+            <ListItemButton
+              onClick={() => handleNavigate(item.path)}
+              sx={{ py: 1.5 }}
+            >
+              <ListItemIcon sx={{ color: isActive(item.path) ? '#667eea' : '#666' }}>
+                {item.badge !== undefined && item.badge > 0 ? (
+                  <Badge badgeContent={item.badge} color="error">
+                    {item.icon}
+                  </Badge>
+                ) : (
+                  item.icon
+                )}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.label}
+                primaryTypographyProps={{
+                  sx: { fontWeight: isActive(item.path) ? 600 : 400 },
+                }}
+              />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
@@ -139,11 +144,13 @@ const Layout = ({ children }) => {
       <Divider sx={{ my: 2 }} />
 
       <List>
-        <ListItem button onClick={handleLogout} sx={{ color: '#ef4444' }}>
-          <ListItemIcon sx={{ color: '#ef4444' }}>
-            <LogoutIcon />
-          </ListItemIcon>
-          <ListItemText primary="Logout" />
+        <ListItem disablePadding sx={{ color: '#ef4444' }}>
+          <ListItemButton onClick={handleLogout}>
+            <ListItemIcon sx={{ color: '#ef4444' }}>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Logout" />
+          </ListItemButton>
         </ListItem>
       </List>
     </Box>
@@ -274,8 +281,7 @@ const Layout = ({ children }) => {
           pt: '64px',
           minHeight: '100vh',
           backgroundColor: '#f5f5f5',
-          ml: { xs: 0, md: 280 },
-          width: { xs: '100%', md: 'calc(100% - 280px)' },
+          width: '100%',
         }}
       >
         {children}
